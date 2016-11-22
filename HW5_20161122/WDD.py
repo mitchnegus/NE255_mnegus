@@ -29,7 +29,6 @@ def Scatter(group,Sigma_s,mg_ccflux,n):
     # Function to calculate scattering into angle a of the nth cell from all angles
     A = len(mg_ccflux[group,0,:])
     ngroups = len(mg_ccflux)
-    
     scattersum = 0
     for primegroup in range(ngroups):
         for ccf_a in mg_ccflux[primegroup,n,:]:
@@ -48,20 +47,24 @@ def Sweep(q_e,Sigma_t,Sigma_s,alpha,group,mu,a,h,ncells,mg_ccflux,influx):
     for n in cellorder:
         scattering = Scatter(group,Sigma_s,mg_ccflux,n)
         centerflux, outflux = WDD_calc1D(q_e,Sigma_t,Sigma_s,alpha,group,mu,h,influx,scattering)
-        print(centerflux)
         calc_ccflux[n] =  centerflux
         influx = outflux
         
     return calc_ccflux,outflux
- 
+
+def abovetol(norm,tol):
+    for i in norm:
+        if i > tol:
+            return True
 
 if __name__ == "__main__":
     # Define parameters
+    tolerance = 1e-05
     q_e = np.array([1.5, 0.0, 0.2]) # external source (by energy group)
     Sigma_t = np.array([0.5,0.8,1.0]) # total absorption cross section (by energy group)
     Sigma_s = np.array([[0.1,0.0,0.0],[0.3,0.1,0.1],[0.1,0.3,0.3]]) # scattering cross section (from energy g[row] to g'[column])
-    Alpha = [0] # weighted diamond difference "weight"
-    mu = [0.2,0.7] # angles
+    Alpha = [0.5] # weighted diamond difference "weight"
+    mu = [0.2,0.5,0.7] # angles
     H = [0.1] # mesh spacing
     lowbound = 0.0 # lower (left) boundary location
     upbound = 2.0 # upper (right) boundary location
@@ -90,10 +93,11 @@ if __name__ == "__main__":
             ngroups = len(q_e)
             
             # More specific plotting parameters
+            X = [x for x in np.arange(lowbound,upbound,h)]
             subplotnum += 1
             ax = fig.add_subplot(subplotnum)
             # Title
-            ax.text(0.5,0.8,'Center-cell Scalar Flux, h=%s' %(str(h)),
+            ax.text(0.5,0.95,'Center-cell Scalar Flux, h=%s' %(str(h)),
                     horizontalalignment='center',
                     verticalalignment='center',
                     transform=ax.transAxes)
@@ -103,53 +107,67 @@ if __name__ == "__main__":
                     verticalalignment='center',
                     transform=ax.transAxes)
             ax.set_ylabel('$\psi_{i}$',rotation=0)
-            plt.plot([0 for i in range(ncells)]) # set "zero" on plot
+            ax.plot(X,[0 for i in range(ncells)]) # set "zero" on plot
             
             mg_ccflux = np.zeros((ngroups,ncells,2*len(mu))) # an array to store the cell-center flux for each angle, mesh cell, and energy group
-            mg_scalarflux = np.zeros((ngroups,ncells))
             
-            # Perform multigroup iterations
-            for group in range(ngroups):
+            # Iterate until each group's scalar flux converges
+            mg_scalarflux = np.zeros((ngroups,ncells))
+            mg_scalarflux_prev = np.zeros_like(mg_scalarflux)
+            mg_scalarfluxnorm2 = [tolerance+1 for norm in range(ngroups)] # flag to start run
+            f = 0 # limit for while loop
+            while abovetol(mg_scalarfluxnorm2,tolerance):
                 
-                g_ccflux = np.zeros_like(mg_ccflux[group]) # an array to store the group's newly calculated cell-center fluxes
-                
-                # Prepare reflecting boundary conditions (construct an array to store values of flux at boundary)
-                reflected = [0 for a in range(len(mu))] 
-                
-                # Iterate until the (group) scalar flux converges
-                g_scalarflux = np.zeros(ncells)
-                g_scalarfluxnorm2 = -1 # flag start of run
-                f = 0 # limit for while loop
-                while (g_scalarfluxnorm2 > 0.0001 or g_scalarfluxnorm2 == -1 ) and f<1000:
+                # Perform multigroup iterations
+                for group in range(ngroups):
                     
-                    calc_ccflux = np.zeros_like(g_ccflux) # an array to store the newly calculated cell-center fluxes
-                    # Sweep (Left->Right), 1 sweep per angle
-                    for a in range(len(mu)):
-                        centerflux,outflux = Sweep(q_e,Sigma_t,Sigma_s,alpha,group,mu[a],a,h,ncells,mg_ccflux,startflux[group])
-                        reflected[a] = outflux  # save the reflected flux to be used as the inputs in the other direction
-                        calc_ccflux[:,a] += centerflux
-                    # Sweep (Right->Left), 1 sweep per angle
-                    for a in range(len(mu)):
-                        a_index = a + len(mu)
-                        centerflux,outflux = Sweep(q_e,Sigma_t,Sigma_s,alpha,group,-mu[a],a_index,h,ncells,mg_ccflux,reflected[a])
-                        calc_ccflux[:,a_index] += centerflux
+                    g_ccflux = np.zeros_like(mg_ccflux[group]) # an array to store the group's newly calculated cell-center fluxes
                     
-                    g_scalarflux_prev = g_scalarflux
-                    g_scalarflux = np.sum(calc_ccflux,axis=1)
+                    # Prepare reflecting boundary conditions (construct an array to store values of flux at boundary)
+                    reflected = [0 for a in range(len(mu))] 
                     
-                    g_scalarfluxnorm2 = math.sqrt(sum((g_scalarflux - g_scalarflux_prev)**2))
+                    # Iterate until the (group) scalar flux converges
+                    g_scalarflux = np.zeros(ncells)
+                    g_scalarfluxnorm2 = [tolerance+1] # flag start of run
+                    g = 0 # limit for while loop
+                    while (abovetol(g_scalarfluxnorm2,tolerance) or g_scalarfluxnorm2 == -1 ):
+                        
+                        calc_ccflux = np.zeros_like(g_ccflux) # an array to store the newly calculated cell-center fluxes
+                        # Sweep (Left->Right), 1 sweep per angle
+                        for a in range(len(mu)):
+                            centerflux,outflux = Sweep(q_e,Sigma_t,Sigma_s,alpha,group,mu[a],a,h,ncells,mg_ccflux,startflux[group])
+                            reflected[a] = outflux  # save the reflected flux to be used as the inputs in the other direction
+                            calc_ccflux[:,a] += centerflux
+                        # Sweep (Right->Left), 1 sweep per angle
+                        for a in range(len(mu)):
+                            a_index = a + len(mu)
+                            centerflux,outflux = Sweep(q_e,Sigma_t,Sigma_s,alpha,group,-mu[a],a_index,h,ncells,mg_ccflux,reflected[a])
+                            calc_ccflux[:,a_index] += centerflux
+                        
+                        g_ccflux = calc_ccflux
+                        
+                        g_scalarflux_prev = g_scalarflux
+                        g_scalarflux = np.sum(calc_ccflux,axis=1)
+                        
+                        g_scalarfluxnorm2 = [math.sqrt(sum((g_scalarflux - g_scalarflux_prev)**2))]
+                        
+                        f+=1
+                        
+                    mg_ccflux[group] = g_ccflux
                     
-                    g_ccflux = calc_ccflux
-                    f+=1
+                    mg_scalarflux_prev[group] = mg_scalarflux[group]
+                    mg_scalarflux[group] = g_scalarflux
                     
-                mg_ccflux[group] = g_ccflux
-                mg_scalarflux[group] = g_scalarflux
-                
-                print('Group %s Scalar Flux:\n' %str(group),g_scalarflux)
-                print('Group %s Norm2: ' %str(group),g_scalarfluxnorm2)
-                
-                plt.plot(mg_scalarflux[group])
+                    mg_scalarfluxnorm2[group] = math.sqrt(sum((mg_scalarflux[group] - mg_scalarflux_prev[group])**2))
+                    
+                    #print('Group %s Scalar Flux:\n' %str(group),mg_scalarflux[group])
+                    print('Norm2\t ','Group %s:' %str(group),mg_scalarfluxnorm2[group])
+            
+            for group in range(ngroups):        
+                line, = ax.plot(X,mg_scalarflux[group])
+                line.set_label('Group %i' %(group+1))
+                ax.legend()
                 
         plt.show()
-        #fig.savefig('C:/Users/Mitch/Documents/Cal/1 - 2016 Fall/NUCENG 255 - Numerical Simulation in Radiation Transport/Homework/HW_Drafts/HW_Figures/HW04_Prob3d/WDD_alpha%s.jpg' %(str(alpha)))
+        fig.savefig('C:/Users/Mitch/Documents/Cal/1 - 2016 Fall/NUCENG 255 - Numerical Simulation in Radiation Transport/Homework/HW_Drafts/HW_Figures/HW05_Prob2/WDD_multigroup.jpg' %(str(alpha)))
         
