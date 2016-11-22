@@ -30,11 +30,13 @@ def Scatter(Sigma_s,ccflux,n):
     A = len(ccflux[0,:])
     scattersum = 0
     for ccf_a in ccflux.T:
-        scattersum += (1/A)*Sigma_s*ccf_a[n]    
+        scattersum += (2/A)*Sigma_s*ccf_a[n]
     return scattersum
 
 
 def Sweep(q_e,Sigma_t,Sigma_s,alpha,mu,a,h,ncells,ccflux,influx):
+    
+    calc_ccflux = np.zeros_like(ccflux[:,a]) # an array to store the newly calculated cell-center fluxes
     # Function to sweep over mesh for a given angle mu
     if mu>0:        # sweep left to right (count up cellorder)
         cellorder = range(ncells)
@@ -43,20 +45,22 @@ def Sweep(q_e,Sigma_t,Sigma_s,alpha,mu,a,h,ncells,ccflux,influx):
     for n in cellorder:
         scattering = Scatter(Sigma_s,ccflux,n)
         centerflux, outflux = WDD_calc1D(q_e,Sigma_t,Sigma_s,alpha,mu,h,influx,scattering)
-        ccflux[n,a] =  centerflux
+        calc_ccflux[n] =  centerflux
         influx = outflux
         
-    return ccflux,outflux
+    return calc_ccflux,outflux
  
 
 if __name__ == "__main__":
     # Define parameters
-    q_e = 1.0
-    Sigma_t = 1
-    Sigma_s = 0.9
+    q_e = 1
+    Sigma_t = 1.0
+    Sigma_s = 0.5
     Alpha = [0]
+    #Alpha = [-0.5,0,0.5]
     mu = [0.2,0.7]
-    H = [0.08,0.1,0.125,0.2,0.4]
+    H = [0.08,0.1]
+    #H = [0.08,0.1,0.125,0.2,0.4]
     lowbound = 0.0
     upbound = 2.0
     startflux = 2.0    
@@ -82,22 +86,26 @@ if __name__ == "__main__":
             scalarflux = np.zeros(ncells)
             scalarfluxnorm2 = -1
             f = 0
-            while (scalarfluxnorm2 > 0.000001 or scalarfluxnorm2 == -1 ) and f<1000:
+            while (scalarfluxnorm2 > 0.0001 or scalarfluxnorm2 == -1 ) and f<1000:
+                
+                calc_ccflux = np.zeros_like(ccflux) # an array to store the newly calculated cell-center fluxes
                 # Sweep (Left->Right), 1 sweep per angle
                 for a in range(len(mu)):
-                    ccflux,outflux = Sweep(q_e,Sigma_t,Sigma_s,alpha,mu[a],a,h,ncells,ccflux,startflux)
+                    centerflux,outflux = Sweep(q_e,Sigma_t,Sigma_s,alpha,mu[a],a,h,ncells,ccflux,startflux)
                     reflected[a] = outflux  # save the reflected flux to be used as the inputs in the other direction
+                    calc_ccflux[:,a] += centerflux
                 # Sweep (Right->Left), 1 sweep per angle
                 for a in range(len(mu)):
-                    ccflux,outflux = Sweep(q_e,Sigma_t,Sigma_s,alpha,-mu[a],(a+len(mu)),h,ncells,ccflux,reflected[a])
-                
+                    a_index = a + len(mu)
+                    centerflux,outflux = Sweep(q_e,Sigma_t,Sigma_s,alpha,-mu[a],a_index,h,ncells,ccflux,reflected[a])
+                    calc_ccflux[:,a_index] += centerflux
                 
                 scalarflux_prev = scalarflux
-                scalarflux = np.sum(ccflux,axis=1)
+                scalarflux = np.sum(calc_ccflux,axis=1)
                 
                 scalarfluxnorm2 = math.sqrt(sum((scalarflux - scalarflux_prev)**2))
                 
-                
+                ccflux = calc_ccflux
                 f+=1
             
             print('Scalar Flux:\n',scalarflux)
@@ -117,6 +125,6 @@ if __name__ == "__main__":
             ax.set_ylabel('$\psi_{i}$',rotation=0)
             plt.plot(scalarflux)
             plt.plot([0 for i in range(ncells)])
-            
-        fig.savefig('C:/Users/Mitch/Documents/Cal/1 - 2016 Fall/NUCENG 255 - Numerical Simulation in Radiation Transport/Homework/HW_Drafts/HW_Figures/HW04_Prob3d/WDD_alpha%s.jpg' %(str(alpha)))
-    
+        plt.show()
+        #fig.savefig('C:/Users/Mitch/Documents/Cal/1 - 2016 Fall/NUCENG 255 - Numerical Simulation in Radiation Transport/Homework/HW_Drafts/HW_Figures/HW04_Prob3d/WDD_alpha%s.jpg' %(str(alpha)))
+        
