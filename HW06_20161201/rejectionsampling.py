@@ -6,6 +6,7 @@ Program to perform rejection sampling in order to calculate pi
 '''
 import random
 import math
+from matplotlib import pyplot as plt
 import distfunc as df
 
 def scoresample(x,y,pdf):
@@ -19,9 +20,10 @@ def scoresample(x,y,pdf):
 if __name__ == "__main__":
     
     pival = 3.14159
-    sampleset = [10,100,1000,10000]
+    sampleset = range(1,10000,40)
     PDF = df.deriv_atan
     
+    relerrs = []
     for samples in sampleset:
         score = 0
         ysum = 0
@@ -41,6 +43,16 @@ if __name__ == "__main__":
         relerr = math.sqrt(abs((1/samples**2)*ysumsq/(pival)**2-(1/samples)))
         pi_calc = 4*scoreratio
         relerr = 4*relerr
-        print(pi_calc,relerr)    
-        
-        
+        relerrs.append(relerr)
+        print(samples,pi_calc,relerr)    
+    
+    X = [i for i in range(1,10000)]
+    Y = [1000*i**(-1/2) for i in range(1,10000)]
+    plt.loglog(sampleset,relerrs,label='Calculated relative errors')
+    plt.loglog(X,Y,label='1/$\sqrt{N}$ comparison')
+    plt.xlabel('# of samples')
+    plt.ylabel('Rel. Err')
+    plt.title('Relative error vs. Sample count')
+    plt.legend()
+    plt.show()
+    
