@@ -15,3 +15,8 @@ def deriv_atan(x):
     # Equation defining the derivative of arctan
     y = 1/(1+x**2)
     return y
+
+def simpleline(m,x):
+    # A simple line with slope m
+    y = m*x
+    return y
