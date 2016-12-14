@@ -1,0 +1,24 @@
+\centering
+\caption{maze2}
+\csvreader[head to column names,
+    tabular = cSScSSSSSS,
+    table head = \toprule
+        &&&& {Max.}
+        & \multicolumn{2}{c}{Run Time (\si{\second})}
+        & \multicolumn{2}{c}{Figure of Merit (\si{\second^{-1}})}
+        \\
+          Quadrature
+        & {$S_N$}
+        & {$P_N$}
+        & {Method}
+        & {Rel. Err.}
+        & {Denovo}
+        & {MCNP}
+        & {MCNP}
+        & {Adjusted}
+        \\\midrule,
+    table foot = \bottomrule,
+    ,filter=\equal{\prob}{maze2},]
+    {tab/results.csv}
+    {}
+    {\quadrature & \SN & \PN & \method & \sigma & \timeDenovo & \timeMCNP & \fomMCNP & \fomAdjusted}

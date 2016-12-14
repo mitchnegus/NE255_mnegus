@@ -1,0 +1,266 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%    PACKAGES    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\usepackage[hmargin=1in, vmargin=1in, columnsep=0.25in]{geometry}
+\usepackage[usenames, dvipsnames]{color}
+
+\usepackage[margin = 0.5in]{caption}
+\usepackage{subcaption, wrapfig,    graphicx}	% FIGURES
+\usepackage{amsfonts,   amssymb,    algorithmic, algorithm}            % MATH
+\usepackage{amsmath,    nccmath,    empheq}
+\usepackage{appendix,   multicol,   outlines}               % SECTIONS
+\usepackage{booktabs,   multirow,   tabularx}               % TABLES
+\usepackage{fancyhdr}                                       % HEADER
+\usepackage{sectsty,    titling,    titlesec,   titletoc}   % TITLE
+\usepackage{datatool,   siunitx,    isotope}	            % DATA & SCIENCE
+\usepackage{listings,   textcomp}				            % IMPORT CODE
+\usepackage{cancel}
+\usepackage{tikz,       flowchart}                          % FLOW CHARTS
+\usepackage{csvsimple}
+\usepackage{dirtree}
+
+\usepackage[onehalfspacing]{setspace}                       % SPACING
+
+\usepackage[backend=bibtex, bibstyle=numeric, sorting=none]{biblatex}
+
+\usepackage[colorlinks=false]{hyperref}
+\usepackage[capitalise]{cleveref}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%    CITATIONS    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\renewcommand*\contentsname{Table of Contents}
+
+\renewbibmacro{in:}{}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    SPACING    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% ARRAY/TABLE SPACING
+\renewcommand{\arraystretch}{1.5}
+
+% \setlength{\parindent}	{0in}
+% \setlength{\parskip}	{\baselineskip}
+
+% EQUATION SPACING
+% http://tex.stackexchange.com/questions/54587/vertical-spacing-within-align-environment-accounting-for-fractions
+\makeatletter
+
+\newlength\minalignvsep
+
+\def\align@preamble{%
+  &\hfil
+    \setboxz@h{\@lign$\m@th\displaystyle{##}$}%
+    \ifnum\row@>\@ne
+    \ifdim\ht\z@>\ht\strutbox@
+    \dimen@\ht\z@
+    \advance\dimen@\minalignvsep
+    \ht\strutbox\dimen@
+    \fi\fi
+    \strut@
+    \ifmeasuring@\savefieldlength@\fi
+    \set@field
+    \tabskip\z@skip
+  &\setboxz@h{\@lign$\m@th\displaystyle{{}##}$}%
+    \ifnum\row@>\@ne
+    \ifdim\ht\z@>\ht\strutbox@
+    \dimen@\ht\z@
+    \advance\dimen@\minalignvsep
+    \ht\strutbox@\dimen@
+    \fi\fi
+    \strut@
+    \ifmeasuring@\savefieldlength@\fi
+    \set@field
+    \hfil
+    \tabskip\alignsep@
+}
+\makeatother
+
+\minalignvsep.75ex
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%    IMPORTING CODE    %%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\definecolor{listinggray}{gray}{0.9}
+\definecolor{lbcolor}{rgb}{0.9,0.9,0.9}
+\lstset{
+%	backgroundcolor=\color{lbcolor},
+	tabsize=4,
+	language=matlab,
+        basicstyle=\ttfamily,
+        upquote=true,
+        aboveskip={1.5\baselineskip},
+        columns=fixed,
+        showstringspaces=false,
+        extendedchars=true,
+        breaklines=true,
+        prebreak = \raisebox{0ex}[0ex][0ex]{\ensuremath{\hookleftarrow}},
+        frame=single,
+        showtabs=false,
+        showspaces=false,
+        showstringspaces=false,
+        identifierstyle=\ttfamily,
+        keywordstyle=\color[rgb]{0,0,1},
+        commentstyle=\color[rgb]{0.133,0.545,0.133},
+        stringstyle=\color[rgb]{0.627,0.126,0.941},
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%    SI UNITS    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\sisetup{sticky-per,									%
+		 inter-unit-product = \ensuremath{{}\cdot{}},	%
+		 per-mode			= symbol,					%
+		 range-phrase		= -,						%
+		 list-units         = brackets,				    %
+		 range-units        = brackets,				    %
+		 round-precision    = 4,                        %
+}
+
+\DeclareSIUnit\inch{in}
+\DeclareSIUnit\pound{lb}
+\DeclareSIUnit\psi{psi}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%    COMMANDS    %%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% CREDIT SECTION AUTHOR
+\newcommand{\sectionauthor}[1]{
+    \small
+    \vspace{-2.5ex}
+    \textit{(#1)}
+    \normalsize
+    \vspace{1ex}
+}
+
+% (RE)DEFINE VECTORS/MATRICES
+\newcommand{\mat}[1]{\boldsymbol{#1}}
+\renewcommand{\vec}[1]{\boldsymbol{#1}}
+
+% (RE)DEFINE HAT
+\let\oldhat\hat
+\renewcommand{\hat}[1]{\oldhat{\mathbf{#1}}}
+
+\newcommand{\bias}[1]{\oldhat{#1}}
+
+% BOX ANSWERS IN ALIGN
+\newcommand*\widefbox[1]{\fbox{\hspace{2em}#1\hspace{2em}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    TABLES    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% http://www.helptouser.com/texlatex/105717-trick-supertabular-into-multicols-in-new-command.html
+\makeatletter
+\let\mcnewpage=\newpage
+\newcommand{\TrickSupertabularIntoMulticols}{%
+  \renewcommand\newpage{%
+    \if@firstcolumn
+      \hrule width\linewidth height0pt
+      \columnbreak
+    \else
+      \mcnewpage
+    \fi
+  }%
+}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%    FLOW CHARTS    %%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% https://www.sharelatex.com/blog/2013/08/29/tikz-series-pt3.html
+
+
+\usetikzlibrary{positioning, fit, calc, shapes, arrows}
+\tikzset{my node/.style={draw, node distance=1cm,shape=rectangle}}
+
+% LENGTHS
+\newlength{\innersep}
+\setlength{\innersep}{2ex}
+
+\newlength{\nodesep}
+\setlength{\nodesep}{0.625cm}
+
+\newlength{\lengthSolution}
+\settowidth{\lengthSolution}{Solution}
+
+\newlength{\lengthAdjoint}
+\settowidth{\lengthAdjoint}{Adjoint}
+
+\newlength{\lengthForward}
+\settowidth{\lengthForward}{Forward}
+
+\newlength{\lengthDenovo}
+\settowidth{\lengthDenovo}{Denovo}
+
+\newlength{\lengthww}
+\settowidth{\lengthww}{$ww$}
+
+% BOXES
+
+\tikzstyle{terminal} = [
+    draw,
+    rectangle,
+    rounded corners,
+    inner sep = \innersep,
+    node distance = \nodesep,
+    text centered,
+]
+
+\tikzstyle{process} = [
+    draw,
+    rectangle,
+    inner sep = \innersep,
+    node distance = \nodesep,
+    text centered,
+]
+
+\tikzstyle{process} = [
+    draw = black,
+    rectangle,
+    inner sep = \innersep,
+    text centered,
+]
+
+\tikzstyle{parameter} = [
+    rectangle,
+    inner sep = \innersep,
+    text centered,
+]
+
+% --------------
+
+\tikzstyle{software} = [
+    draw = black,
+    diamond,
+    inner sep = \innersep,
+    text centered,
+    minimum height = \nodesep,
+]
+
+\tikzstyle{subsoftware} = [
+    draw = black,
+    rectangle,
+    inner sep = \innersep,
+    text centered,
+    minimum height = \nodesep,
+]
+
+\tikzstyle{file} = [
+    draw = black,
+    rectangle, rounded corners,
+    inner sep = \innersep,
+    text centered,
+    minimum height = \nodesep,
+]
+
+\tikzstyle{fixed} = [
+    rectangle, rounded corners,
+    inner sep = \innersep,
+    text centered,
+    minimum height = \nodesep,
+]
+
+\tikzstyle{arrow} = [thick, ->, >=stealth]

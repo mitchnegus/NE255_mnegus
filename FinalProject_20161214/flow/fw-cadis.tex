@@ -1,0 +1,72 @@
+\centering
+\singlespacing
+\renewcommand{\arraystretch}{1.25}
+
+\begin{tikzpicture}[node distance = 2\nodesep]
+\small
+
+\node[software]
+    (ADVANTG)
+    {ADVANTG};
+
+\node[software, left = of ADVANTG, xshift=-2\nodesep]
+    (MCNP)
+    {MCNP};
+    
+\node[file, above = of MCNP]
+    (inputADVANTG)
+    {$\begin{matrix}
+\texttt{inp} \\
+^\ast\texttt{.py}
+\end{matrix}$};
+
+\node[file, below = of MCNP]
+    (outputADVANTG)
+    {$\begin{matrix}
+\texttt{inp}^{\star\star} \\
+\texttt{wwinp}
+\end{matrix}$};
+
+\node[file, left = of MCNP]
+    (outputMCNP)
+    {
+$\begin{matrix}
+^\ast\texttt{o} \\
+\texttt{meshtal}
+\end{matrix}$};
+
+\node[fixed, right = of ADVANTG, xshift=2\nodesep]
+    (Denovo)
+    {};
+    
+\node[subsoftware, above = of Denovo]
+    (ForwardDenovo)
+    {Forward Denovo};
+    
+\node[subsoftware, below = of Denovo]
+    (AdjointDenovo)
+    {Adjoint Denovo};
+    
+\node[file, below = of ADVANTG, yshift=0.75\nodesep]
+    (silo)
+    {\texttt{.silo}};
+    
+\node[software, below = of silo, yshift=0.75\nodesep]
+    (VisIt)
+    {VisIt};
+
+\draw[arrow] (inputADVANTG) -- (ADVANTG);
+\draw[arrow] (ADVANTG) -- node[anchor=south] {$q$} (ForwardDenovo.west);
+\draw[arrow] (ForwardDenovo) -- node[anchor=west] {$q^\dagger$} (AdjointDenovo);
+\draw[arrow] (AdjointDenovo.west) -- node[anchor=north] {$\phi^\dagger$} (ADVANTG);
+\draw[arrow] (ADVANTG) -- (silo);
+\draw[arrow] (silo) -- (VisIt);
+\draw[arrow] (ADVANTG) -- node[anchor=north] {
+$\begin{Bmatrix} 
+ww \\
+w_0 \\
+\rho
+\end{Bmatrix}$} (outputADVANTG);
+\draw[arrow] (outputADVANTG) -- (MCNP);
+\draw[arrow] (MCNP) -- (outputMCNP);
+\end{tikzpicture}

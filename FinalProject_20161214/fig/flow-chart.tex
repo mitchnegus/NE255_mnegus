@@ -1,0 +1,59 @@
+\centering
+\singlespacing
+\renewcommand{\arraystretch}{1.25}
+\begin{tikzpicture}[node distance = \nodesep]
+
+\node[parameter]
+    (flux)
+    {$\phi$};
+
+\node[process, right = of flux,
+        text width = \lengthForward]
+    (denovofwd)
+    {Forward Denovo};
+
+\node[parameter, right = of denovofwd]
+    (qadj)
+    {$q^\dagger$};
+
+\node[process, below = of qadj,
+        text width = \lengthAdjoint]
+    (denovoadj)
+    {Adjoint Denovo};
+
+\node[parameter, below = of denovoadj]
+    (fluxadj)
+    {$\phi^\dagger$};
+
+\node[parameter, right = of fluxadj]
+    (adv2)
+    {
+$\begin{Bmatrix} 
+ww \\
+w_0 \\
+\rho
+\end{Bmatrix}$
+};
+    % {$ww$ $w_0$ $\rho$};
+    
+\node[process, right = of adv2]
+    (mcnp)
+    {MCNP};
+
+\node[terminal, right = of mcnp,
+        text width = \lengthSolution]
+    (soln)
+    {Actual Solution};
+
+% ARROWS
+\draw[arrow] (flux) -- (denovofwd);
+\draw[arrow] (denovofwd) -- (qadj);
+\draw[arrow] (qadj) -- (denovoadj);
+\draw[arrow] (denovoadj) -- (fluxadj);
+\draw[arrow] (fluxadj) -- (adv2);
+\draw[arrow] (adv2) -- (mcnp);
+\draw[arrow] (mcnp) -- (soln);
+
+\end{tikzpicture}
+\onehalfspacing
+\renewcommand{\arraystretch}{1.5}
