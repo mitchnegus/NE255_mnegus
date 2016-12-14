@@ -251,14 +251,14 @@ The CADIS method begins to lose efficiency however, when used to determine respo
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
 R = R_1 + R_2 + ... + R_N.
-\label{eq:respsum}
+\label{eq:respsum1}
 \end{align}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-It is obvious that the former strategy becomes impractical when the number of simulations becomes large, meanwhile the latter suffers with distance from the adjoint source since \cref{eq:respsum} implies
+It is obvious that the former strategy becomes impractical when the number of simulations becomes large, meanwhile the latter suffers with distance from the adjoint source since \cref{eq:respsum1} implies
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{align}
 q^{\dagger} = q^{\dagger}_1 + q^{\dagger}_2 + ... + q^{\dagger}_N.
-\label{eq:respsum}
+\label{eq:respsum2}
 \end{align}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 The dependence on distance becomes clear when one considers that the importance map is determined by a particle's expected contribution to the total response, and particles far from the source will be less likely to contribute \cite{software:advantg}.
@@ -495,6 +495,26 @@ As specified by the work of Madicken Munk \cite{munk:git}, seven test cases were
 \1 A therapy room derived from a radiation therapy vault.
 \end{outline}
 
+\subsection{Generating ADVANTG Inputs}
+    All files associated with running ADVANTG are located within a single \texttt{ADVANTG\_tests} directory. Within this directory, a subdirectory exists for executing operations up to and including running ADVANTG; this is the \texttt{ADVANTG\_tests/main} subdirectory.
+    To create the python driver files and corresponding runscripts, the user must run the advinpGen.py file. This generator script relies on two ADVANTG python driver templates (one for product quadrature types and another for triangular quadrature types). For successful operation, the ADVANTG generator file must be edited by the user prior to execution to include the following parameters:
+    \begin{itemize}
+        \item \textbf{Method: } CADIS or FW-CADIS
+        \item \textbf{MCNP Input: } MCNP geometry (\textit{i.e} maze1, maze2, beam)
+        \item \textbf{MCNP Tallies: } tallies for MCNP geometry
+        \item \textbf{Denovo Quadrature: } quadrature set type to use
+        \item \textbf{Denovo Quadrature Order: } quadrature order
+        \item \textbf{$P_N$ Order: } scattering expansion order
+    \end{itemize}
+    
+    Additionally, the path to the template files must be supplied in the script along with the path to a pair of user-defined directories where ADVANTG driver inputs and runscripts will be generated. The template files are designed to be generic so that unless the user wishes to change other parameters than those listed above, no modification to the template files must be made.
+    
+    The script iterates through all combinations of these parameters and generates outputs. The program is able to differentiate between product and triangular quadrature sets, and will modify the appropriate template. 
+    
+    During execution of the ADVANTG input generator, the runscript generator module, runscriptGen.py, is also invoked. This module will produces runscripts in the directory specified in the advinpGen.py script which are compatible with the Slurm Workload Manager available on UC Berkeley's Savio. If another workload manager is used, the runscriptGen.py module must be updated accordingly. 
+    
+    To submit jobs to a high-performance computing cluster, the runscripts can be submitted using the \texttt{runADVANTG_geom.sh} BASH shell script (found in the \texttt{ADVANTG_tests/main} directory). Running this file requires 6 inputs given in order as command line arguments upon execution. These six inputs consist of the geometry to be run (geometries are submitted one at a time for all parameters), the method (\texttt{cadis/fwcadis}), the runscript directory, the location of the MCNP input files, the directory where files should be output, and an optional argument for a storage location where files should be moved. 
+    
 \subsection{Plotting with VisIt}
 
 	VisIt is an open source distributed, parallel visualization and graphical analysis tool that can represent two and three dimensional meshes \cite{llnl:visit}. VisIt was originally created by the Department of Energy (DOE) Advanced Simulation and Computing Initiative (ASCI) in order analyze the results of terrascale simulations \cite{llnl:visit}. Although VisIt was initially designed for terrascale data analysis, it has shown to be useful for visualizing small sets of data on desktop systems. For these reasons, VisIt was used to model the silo files produced during the cadis run, for seven test cases. 
@@ -675,7 +695,7 @@ However, assigning a source term to each mesh resulted in plots that were either
 \end{subfigure}
 \end{figure}
 
-After getting help from Madicken, source term was discarded in favor of integral flux and this gave a better trend in terms of quadrature number.
+After consideration, the source term was discarded in favor of integral flux and this gave a better trend in terms of quadrature number.
 The major drawback of plotting in VisIt was the amount of time it took to understand VisIt, and the amount of time it took to actually generate silo files for each case.
 In the future, now that there is a better understanding of Visit, it might be useful to plot more silo files (instead of just the ones that increase quadrature order) so that more trends can be recognized.
 
@@ -692,7 +712,10 @@ In the future, now that there is a better understanding of Visit, it might be us
 We ran the simulations for the beam, maze1, maze2, prob$\_$1, prob$\_$2, prob$\_$4, each simulation, we looked at the maximum relative error, simulation run time, and both MCNP and adjusted figure of merit, where the adjusted FOM includes the Denovo run time as well as the MCNP run time.
 For CADIS, it was possible to plot both the tally output results and relative errors as functions of energy bin.
 For both CADIS and FW-CADIS, we plotted histograms of the distribution of the relative errors.
-Examples of these four plots are shown in \cref{maze1-cad,maze1-fwc}.
+Examples of these four plots are shown in \cref{maze1-cad,maze1-fwc}. 
+
+For calculation analysis, we restricted our test cases to maze1, maze2, and beam geometries. Our findings indicate  that the CADIS method consistently provided better figure of merit values for maze1 and maze2, while the beam geometry performed better using FW-CADIS.
+
 
 \begin{figure}[!ht]
 \centering
@@ -805,8 +828,7 @@ Examples of these four plots are shown in \cref{maze1-cad,maze1-fwc}.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Summary}
 
-Throughout the course of this project, we performed CADIS and FW-CADIS runs on seven geometries, each with varied parameters. 
-We found that test cases for both CADIS and FW-CADIS runs had 
+Throughout the course of this project, CADIS and FW-CADIS runs were performed for seven geometries, each with varied parameters. After running CADIS and FW-CADIS, we find the behavior of the figure of merit for a given method is certainly dependent on the geometry in question. 
 
 \label{sec:sum}
 
@@ -816,7 +838,9 @@ We found that test cases for both CADIS and FW-CADIS runs had
 \section{Code Organization}
 \label{app:code-org}
 
-Group files were shared on Savio in the \texttt{/global/scratch/co$\_$nuclear/NE255project/} directory. Consistent and thoughtful file organization was extremely important to the automation process.
+Group files were shared on the UC Berkeley high-performance computing cluster, Savio, in the\\ \texttt{/global/scratch/co$\_$nuclear/NE255project/} directory. Consistent and thoughtful file organization was extremely important to the automation process.
+
+Code for automation of ADVANTG inputs can be found on GitHub at \url{https://github.com/mnegus01/caskmodels}
 
 \begin{figure}[!ht]
 \input{dir/advantg.tex}
@@ -830,53 +854,9 @@ Group files were shared on Savio in the \texttt{/global/scratch/co$\_$nuclear/NE
 \label{docs:mcnp}
 \end{figure}
 
-\begin{table}
+\begin{sidewaystable}
 \input{tab/compare-P3-P5.tex}
-\end{table}
+\end{sidewaystable}
 
 
 \end{document}
-
-
-% Things Mitch cut but doesn't want to delete yet...
-
-By definition, the response of a detector is given by 
-
-When considering fixed source problems, the adjoint flux FW-CADIS is ``particularly useful'' for problems with a fixed source $q$ \cite{slaybaugh:deterministic-parameter-study}.
-For a detector response at $(\vec{r}_0, E_0, \hat{\Omega}_0)$ the TE becomes \cite{slaybaugh:250-notes:10-19},
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{align*}
-H \psi
-&=
-q
-=
-\delta(\vec{r}      - \vec{r}_0)
-\delta(E            - E_0)
-\delta(\hat{\Omega} - \hat{\Omega}_0)\;;
-% % 
-% %
-% \left<
-% \psi^\dagger, H \psi
-% \right>
-% =
-% \left<
-% \psi^\dagger , q
-% \right>
-\\
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-H^\dagger \psi^\dagger
-&=
-q^\dagger\;.
-%
-% &
-% %
-% \left<
-% \psi , H^\dagger \psi^\dagger
-% \right>
-% &=
-% \left<
-% \psi, q^\dagger
-% \right> = R
-\end{align*}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
